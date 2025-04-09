@@ -1,0 +1,45 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      lang="en"
+   metal:use-macro="context/@@main_template/macros/master"
+      xml:lang="en"
+   i18n:domain="plone"
+>
+<body>
+
+<metal:content-core fill-slot="content-core">
+  <metal:content-core define-macro="content-core"
+     tal:define="
+    toc python: getattr(context, 'table_of_contents', False);
+    "
+  >
+    <section class="card mb-3">
+      <div class="py-2 my-2 mx-2 d-flex align-items-center" style="align-items: center">
+        <h5 class="d-inline mb-0">Thématique:</h5>
+        <div class="mt-1">
+          <span tal:condition="python: context.theme != 'Indéterminé'"
+            class="badge rounded-pill text-bg-success ms-2 mb-1" tal:content="context/theme">Success</span>
+          <span tal:condition="python: context.theme == 'Indéterminé'"
+            class="badge rounded-pill text-bg-light ms-2 mb-1" tal:content="context/theme">Success</span>
+        </div>
+      </div>
+    </section>
+    <section id="section-text">
+      <div id="parent-fieldname-text"
+         tal:condition="python:getattr(context, 'text', None)"
+         tal:content="structure python:context.text.output_relative_to(view.context)"
+         tal:attributes="
+        class python: toc and 'pat-autotoc' or '';
+        "
+      >
+        Text
+      </div>
+    </section>
+
+  </metal:content-core>
+</metal:content-core>
+
+</body>
+</html>

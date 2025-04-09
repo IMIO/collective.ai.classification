@@ -1,0 +1,38 @@
+<configure
+  xmlns="http://namespaces.zope.org/zope"
+  xmlns:browser="http://namespaces.zope.org/browser"
+  xmlns:plone="http://namespaces.plone.org/plone"
+  i18n_domain="collective.ai.classification">
+
+  <!-- Set overrides folder for Just-a-Bunch-Of-Templates product -->
+  <include package="z3c.jbot" file="meta.zcml"/>
+  <browser:jbot
+    directory="overrides"
+    layer="collective.ai.classification.interfaces.ICollectiveAIClassificationLayer"
+  />
+
+  <!-- Publish static files -->
+  <plone:static
+    name="collective.ai.classification"
+    type="plone"
+    directory="static"
+  />
+
+  <browser:page
+    name="ai-classification-action"
+    for="*"
+    class=".action.AIClassifierAction"
+    permission="cmf.ModifyPortalContent"
+    layer="collective.ai.classification.interfaces.ICollectiveAIClassificationLayer"
+    allowed_attributes="available classify"
+  />
+
+  <browser:page
+    name="collective-ai-classification-settings"
+    for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+    class=".controlpanel.AIClassificationControlPanelView"
+    permission="cmf.ManagePortal"
+    layer="collective.ai.classification.interfaces.ICollectiveAIClassificationLayer"
+  />
+
+</configure>
