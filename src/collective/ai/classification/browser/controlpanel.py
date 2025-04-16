@@ -77,7 +77,7 @@ class IAIClassificationSettings(Interface):
 class AIClassificationControlPanelForm(RegistryEditForm):
     label = _("AI classification settings")
     schema = IAIClassificationSettings
-
+    ignoreRequiredOnExtract = True
 
 AIClassificationControlPanelView = layout.wrap_form(
     AIClassificationControlPanelForm, AICoreControlPanelFormWrapper
