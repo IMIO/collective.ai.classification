@@ -5,10 +5,12 @@ import logging
 from collective.ai.classification.browser.controlpanel import IAIClassificationSettings
 from collective.ai.core.browser.controlpanel import IAICoreSettings
 from collective.ai.core.services import IAIAPIService
+from plone import api
 from plone.dexterity.utils import iterSchemataForType
 from plone.registry.interfaces import IRegistry
+from plone.restapi.interfaces import ISerializeToJson
 from zope.component import getUtility, adapter
-from zope.component._api import getAdapter
+from zope.component._api import getAdapter, getMultiAdapter
 from zope.interface import implementer, Interface
 
 logger = logging.getLogger("collective.ai.summarizer")
@@ -38,6 +40,10 @@ class AIClassificationAdapter:
     def source_field(self):
         return self.classification_config['source_field']
 
+    def prompt_context(self):
+        serializer = getMultiAdapter((self.context, self.request), ISerializeToJson)
+        return serializer()
+
     def prompt(self):
         return self.classification_config['prompt']
 
@@ -47,15 +53,13 @@ class AIClassificationAdapter:
         service = getAdapter(self.context, IAIAPIService, service_type)
         service(int(config_id), model_id)
         portal_type = self.context.portal_type
-        testy = _get_field_and_schema_for_fieldname("category", portal_type)
-        tokens, values, titles = _get_vocabulary_values(self.context, "category")
+        field, schema = _get_field_and_schema_for_fieldname(self.source_field(), portal_type)
+        tokens, values, titles = _get_vocabulary_values(self.context, self.source_field())
         response = service.client.chat.completions.create(
-            model="gpt-4o",
+            model=model_id,
             messages=[
-                {"role": "system",
-                 "content": "You are a helpful classification assistant. Classify the following content:"},
                 {"role": "user",
-                 "content": "Here is the content:\n\n'''" + getattr(self.context, "text").output + "''' \n Catégorie:"}
+                 "content": self.prompt().format(self.prompt_context())}
             ],
             response_format={
                 "type": "json_schema",
@@ -75,13 +79,13 @@ class AIClassificationAdapter:
                     "strict": True
                 }
             })
-        res = response.choices[0].message.content
-        res = res.replace("\\\\xe9", "é")
         try:
+            res = response.choices[0].message.content
             res = json.loads(res)
-            setattr(self.context, "category", res["value"])
+            setattr(self.context, self.source_field(), res["value"])
+            self.context.reindexObject()
         except:
-            pass
+            api.portal.show_message(message='There was an error during the classification process, check the configuration of the model and the prompt.',)
 
 
 
